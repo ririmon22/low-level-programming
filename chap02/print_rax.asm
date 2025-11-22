@@ -5,27 +5,39 @@ codes:
 section .text
 global _start
 _start:
-    ; store number in general-purpose registers
-    mov rax, 0x1122334455667788 ; output number
-    mov rdi, 1 ; write() first argument (stdout)
-    mov rdx, 1 ; write() third argument (output length)
-    mov rcx, 64 ; 64bit counter
+    ; この1122...という数字は16進表記
+    mov rax, 0x1122334455667788
+
+    mov rdi, 1
+    mov rdx, 1
+    mov rcx, 64
+    ; 4ビットを16進の1桁として出力していくために、
+    ; シフトと論理和(AND)によって1桁のデータを得る。
+    ; その結果は'codes'配列へのオフセットである。
 
 .loop:
-    push rax  ; raxの値を取得
-    sub rcx, 4 ; 4bitずつ処理するのでカウントを減らす
-    sar rax, cl ; raxをclビット右シフト
-    and rax, 0xf ; 下位4ビットだけを取り出す。
+    push rax
+    sub rcx, 4
+    ; clはレジスタ (rcxの最下位バイト)
+    ; rax > eax > ax = (ah + al)
+    ; rcx > ecx > cx = (ch + cl)
+    sar rax, cl
+    and rax, 0xf
 
-    lea rsi, [codes + rax]; その値をcodes テーブルのオフセットに
-    mov rax, 1 ; write syscall
-    push rcx ; syscallでrcxが上書きされるため退避
-    syscall ; write(1, rsi, 1)
-    pop rcx ; rcxを戻す
-    pop rax ; raxを戻す
-    test rcx, rcx ; rcxが0かチェック
-    jnz .loop ; 0でなければループ
+    lea rsi, [codes + rax]
+    mov rax, 1
+    
+    ; syscallでrcxとr11が変更される
+    push rcx
+    syscall
+    pop rcx
 
-mov rax, 60
-xor rdi, rdi
-syscall
+    pop rax
+    ; testは最速の'ゼロか?'チェックに使える
+    ; マニュアルで'test'コマンドを参照
+    test rcx, rcx
+    jnz .loop
+
+    mov rax, 60 ; 'exit'システムコール
+    xor rdi, rdi
+    syscall
