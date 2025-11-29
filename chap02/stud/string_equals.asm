@@ -1,10 +1,9 @@
-
-        section .data
-        arg1: db '', 0
-        arg2: times 1 db  66
+section .data
+             str1: db 'asd',0
+             str2: db 'asd',0
         section .text
         %include "lib.inc"
-        global _start 
+        global _start
         _start:
         
 mov rdi, -1
@@ -23,11 +22,9 @@ push r13
 push r14
 push r15
 
-        mov rdi, arg1
-        mov rsi, arg2
-        mov rdx, 1
-        call string_copy
-
+        mov rdi, str1
+        mov rsi, str2
+        call string_equals
         
 cmp r15, [rsp]
 jne .convention_error
@@ -66,8 +63,6 @@ err_calling_convention: db "You did not respect the calling convention! Check th
 section .text
 continue:
 
-        mov rdi, arg2 
-        call print_string
+        mov rdi, rax
         mov rax, 60
-        xor rdi, rdi
         syscall

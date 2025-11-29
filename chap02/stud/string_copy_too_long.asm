@@ -1,7 +1,9 @@
 
-        section .data
+            section .rodata
+            err_too_long_msg: db "string is too long", 10, 0
+            section .data
         arg1: db '', 0
-        arg2: times 1 db  66
+        arg2: times 0 db  66
         section .text
         %include "lib.inc"
         global _start 
@@ -25,9 +27,14 @@ push r15
 
         mov rdi, arg1
         mov rsi, arg2
-        mov rdx, 1
+        mov rdx, 0
         call string_copy
-
+        test rax, rax
+        jnz .good
+        mov rdi, err_too_long_msg 
+        call print_string
+        jmp _exit
+        .good:
         
 cmp r15, [rsp]
 jne .convention_error
@@ -68,6 +75,7 @@ continue:
 
         mov rdi, arg2 
         call print_string
+        _exit:
         mov rax, 60
         xor rdi, rdi
         syscall
